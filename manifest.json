@@ -1,0 +1,10 @@
+{
+	"id": "tempting-tasks",
+	"name": "Tempting Tasks",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Easy to use task management system",
+	"author": "Macsoo",
+	"authorUrl": "https://github.com/Macsoo",
+	"isDesktopOnly": false
+}
