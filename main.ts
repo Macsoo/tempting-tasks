@@ -1,14 +1,16 @@
 import {Plugin, WorkspaceLeaf} from 'obsidian';
 import {ISSUES_VIEW_TYPE, IssuesView} from "./issuesView";
-import type {Issue, ID} from "./dataTypes";
+import type {Issue, ID, Task, New} from "./dataTypes";
 
 export interface TemptingTasksSettings {
 	issues: Issue[];
+	tasks: Task[];
 	maxId: ID;
 }
 
 const DEFAULT_SETTINGS: TemptingTasksSettings = {
 	issues: [],
+	tasks: [],
 	maxId: 0,
 };
 
@@ -79,5 +81,24 @@ export default class TemptingTasksPlugin extends Plugin {
 		this.settings.maxId += 1;
 		await this.saveSettings();
 		return id;
+	}
+
+	async newTask(issueId: ID, task: New<Task>) {
+		const newId = await this.getNewId();
+		this.settings.tasks.push(Object.assign({
+			id: newId,
+		}, task));
+		const issue = this.settings.issues.find(issue => issue.id === issueId);
+		if (issue) {
+			issue.taskIDs.push(newId);
+			issue.events.push({
+				when: new Date(),
+				what: {
+					type: 'addedTask',
+					taskId: newId,
+				}
+			});
+		}
+		await this.saveSettings();
 	}
 }

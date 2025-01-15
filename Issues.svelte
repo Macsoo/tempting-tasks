@@ -1,32 +1,40 @@
 <script lang="ts">
 	import type {Issue} from "./dataTypes";
+	import IssueTag from './Issue.svelte';
 	interface Props {
 		initialIssues: Issue[];
 		newIssue: () => Promise<Issue[]>;
-		renderMarkdown: (element: HTMLElement, markdown: string) => Promise<void>;
+		addBugfix: (issue: Issue) => Promise<Issue[]>;
+		addFeature: (issue: Issue) => Promise<Issue[]>;
 	}
 	let {
 		initialIssues,
 		newIssue,
-		renderMarkdown,
+		addBugfix,
+		addFeature,
 	}: Props = $props();
 	let issues = $state(initialIssues);
-	async function askNewIssue() {
-		issues = await newIssue();
+	function updateIssuesWith<T>(func: (arg: T) => Promise<Issue[]>) {
+		return (theArg: T) => async () => {
+			issues = await func(theArg);
+		};
 	}
-	const onload = (el: HTMLElement, issue: Issue) => {
-		renderMarkdown(el, `
-		> [!warning] ${issue.title}
-		> Customer: ${issue.customer}
-		`);
-	};
+	const askNewIssue = updateIssuesWith<void>(newIssue);
+	const askNewBugfix = updateIssuesWith(addBugfix);
+	const askNewFeature = updateIssuesWith(addFeature);
+	$inspect(issues);
 </script>
 
-<div>
+<div class="issue">
 	{#each issues as issue}
-		<div use:onload={issue}></div>
+		<IssueTag
+			type="todo"
+			title={issue.title}
+			addBugfix={askNewBugfix(issue)}
+			addFeature={askNewFeature(issue)}
+		/>
 	{/each}
-	<button onclick={askNewIssue}>Add Issue</button>
+	<button onclick={askNewIssue()}>Add Issue</button>
 </div>
 <style>
 </style>

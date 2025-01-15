@@ -1,9 +1,12 @@
-import {ItemView, MarkdownRenderer, type MarkdownViewModeType, WorkspaceLeaf} from "obsidian";
+import {type App, ItemView, WorkspaceLeaf} from "obsidian";
 import Issues from "./Issues.svelte";
 import {mount, unmount} from "svelte";
 import TemptingTasksPlugin from "./main";
 import {IssueModal} from "./issueModal";
-import type {Issue, NewIssue} from "./dataTypes";
+import type {Issue} from "./dataTypes";
+import {NewBugfixModal} from "./newBugfixModal";
+import {NewFeatureModal} from "./newFeatureModal";
+import type {AskModal} from "./askModal";
 
 export const ISSUES_VIEW_TYPE = 'example-view';
 
@@ -19,16 +22,7 @@ export class IssuesView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "Example view";
-	}
-
-	renderMarkdown(element: HTMLElement, markdown: string): Promise<void> {
-		const processedMd = markdown
-			.split('\n')
-			.map(r => r.trim())
-			.filter(r => r !== '')
-			.join('\n');
-		return MarkdownRenderer.render(this.app, processedMd, element, "", this);
+		return "Issues";
 	}
 
 	async onOpen() {
@@ -36,24 +30,40 @@ export class IssuesView extends ItemView {
 			target: this.contentEl,
 			props: {
 				initialIssues: this.plugin.settings.issues,
-				newIssue: () => new Promise<Issue[]>(resolve => {
-					new IssueModal(this.app, async newIssue => {
-						this.plugin.settings.issues.push(Object.assign({
-							id: await this.plugin.getNewId(),
-							tasks: [],
-							events: [{
-								when: new Date(),
-								what: {
-									type: 'created'
-								}
-							}],
-							status: "open",
-						} satisfies Omit<Issue, keyof NewIssue>, newIssue));
-						await this.plugin.saveSettings();
-						resolve(this.plugin.settings.issues);
-					}).open();
+				newIssue: this.modal(IssueModal, async (_: void, newIssue) => {
+					const issue: Issue = {
+						id: await this.plugin.getNewId(),
+						title: newIssue.title,
+						customer: newIssue.customer,
+						taskIDs: [],
+						events: [{
+							when: new Date(),
+							what: {
+								type: 'created',
+							},
+						}],
+						status: 'open',
+					};
+					this.plugin.settings.issues.push(issue);
+					await this.plugin.saveSettings();
+					return this.plugin.settings.issues;
 				}),
-				renderMarkdown: this.renderMarkdown.bind(this),
+				addBugfix: this.modal(NewBugfixModal, async (issue: Issue, bugfix) => {
+					await this.plugin.newTask(issue.id, {
+						type: "bugfix",
+						description: bugfix.description,
+					});
+					return this.plugin.settings.issues;
+				}),
+				addFeature: this.modal(NewFeatureModal, async (issue: Issue, feature) => {
+					await this.plugin.newTask(issue.id, {
+						type: "feature",
+						event: feature.event,
+						conditions: feature.conditions,
+						action: feature.action,
+					});
+					return this.plugin.settings.issues;
+				})
 			}
 		});
 	}
@@ -62,5 +72,16 @@ export class IssuesView extends ItemView {
 		if (this.counter) {
 			await unmount(this.counter);
 		}
+	}
+
+	modal<Arg, ModalResult, PromiseResult, M extends AskModal<ModalResult>>(
+		modalType: { new(app: App, onSubmit: (result: ModalResult) => Promise<void>): M },
+		onSubmit: (arg: Arg, modalResult: ModalResult) => Promise<PromiseResult>,
+	): (arg: Arg) => Promise<PromiseResult> {
+		return (arg: Arg) => new Promise<PromiseResult>(resolve => {
+			new modalType(this.app, async modalResult => {
+				resolve(await onSubmit(arg, modalResult));
+			}).open();
+		});
 	}
 }

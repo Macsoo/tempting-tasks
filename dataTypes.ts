@@ -9,13 +9,12 @@ export type Task = {
 } & TaskType;
 
 export interface Bugfix {
-	versions: number[];
 	description: string;
 }
 
 export interface Feature {
 	event: string;
-	condition: string;
+	conditions: string[];
 	action: string;
 }
 
@@ -29,7 +28,7 @@ export type IssueEventType = {
 	to: Status;
 } | {
 	type: 'addedTask';
-	task: Task;
+	taskId: ID;
 }
 
 export interface IssueEvent {
@@ -40,20 +39,17 @@ export interface IssueEvent {
 
 export type ID = number;
 
-type GenerateIssues<T> = T extends any ? NewIssue & {
-	issueType: T;
-	tasks: Extract<Task, { type: T }>[];
+export type New<T> = T extends any ? Omit<T, 'id'> : never;
+
+export interface Issue {
+	title: string;
+	customer: string;
+	taskIDs: ID[];
 	id: ID;
 	events: IssueEvent[];
 	status: Status;
 	statusComment?: string;
 	parentIssue?: ID;
-} : never;
-
-export type Issue = GenerateIssues<Task['type']>;
-
-export interface NewIssue {
-	title: string;
-	customer: string;
-	issueType: Task['type'];
 }
+
+export type NewIssue = Pick<Issue, 'title' | 'customer'>;
