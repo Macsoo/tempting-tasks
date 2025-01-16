@@ -18,16 +18,16 @@ export interface Feature {
 	action: string;
 }
 
-export type Status = 'open' | 'started' | 'pending' | 'finished' | 'closed';
-
 export type IssueEventType = {
 	type: 'created';
 } | {
-	type: 'changedStatus';
-	from: Status;
-	to: Status;
-} | {
 	type: 'addedTask';
+	taskId: ID;
+} | {
+	type: 'closedTask';
+	taskId: ID;
+} | {
+	type: 'reopenedTask';
 	taskId: ID;
 }
 
@@ -47,7 +47,6 @@ export interface Issue {
 	taskIDs: ID[];
 	id: ID;
 	events: IssueEvent[];
-	status: Status;
 	statusComment?: string;
 	parentIssue?: ID;
 }

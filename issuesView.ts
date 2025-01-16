@@ -42,7 +42,6 @@ export class IssuesView extends ItemView {
 								type: 'created',
 							},
 						}],
-						status: 'open',
 					};
 					this.plugin.settings.issues.push(issue);
 					await this.plugin.saveSettings();
@@ -63,7 +62,9 @@ export class IssuesView extends ItemView {
 						action: feature.action,
 					});
 					return this.plugin.settings.issues;
-				})
+				}),
+				getBugfixes: this.plugin.getBugfixesForIssue.bind(this.plugin),
+				onTaskChange: this.plugin.changeTaskStatus.bind(this.plugin),
 			}
 		});
 	}

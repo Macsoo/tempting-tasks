@@ -101,4 +101,24 @@ export default class TemptingTasksPlugin extends Plugin {
 		}
 		await this.saveSettings();
 	}
+
+	getBugfixesForIssue(issue: Issue) {
+		return issue.taskIDs
+			.map(taskID => this.settings.tasks.find(task => task.id === taskID))
+			.filter(task => task !== undefined);
+	}
+
+	async changeTaskStatus(issueId: ID, taskId: ID, checked: boolean) {
+		const issue = this.settings.issues.find(issue => issue.id === issueId);
+		if (issue) {
+			issue.events.push({
+				when: new Date(),
+				what: {
+					type: checked ? 'closedTask' : 'reopenedTask',
+					taskId: taskId,
+				},
+			});
+		}
+		await this.saveSettings();
+	}
 }
