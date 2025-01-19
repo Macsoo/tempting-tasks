@@ -8,7 +8,7 @@
 		addBugfix: (issue: Issue) => Promise<Issue[]>;
 		addFeature: (issue: Issue) => Promise<Issue[]>;
 		getBugfixes: (issue: Issue) => Extract<Task, { type: 'bugfix' }>[];
-		onTaskChange: (issueId: ID, taskId: ID, checked: boolean) => Promise<void>;
+		onTaskChange: (issueId: ID, taskId: ID | null, checked: boolean) => Promise<void>;
 	}
 
 	let {
@@ -37,6 +37,7 @@
 		<IssueTag
 			type="todo"
 			title={issue.title}
+			isDone={issue.done}
 			addBugfix={askNewBugfix(issue)}
 			addFeature={askNewFeature(issue)}
 			bugfixes={getBugfixes(issue)}
@@ -46,6 +47,17 @@
 	<button onclick={askNewIssue()}>Add Issue</button>
 </div>
 <style>
+	:global(div.setting-item.conditions) {
+		display: grid;
+	}
+
+	:global(div.setting-item.conditions > :nth-child(-n + 2)) {
+		padding-bottom: 0.75em;
+		grid-column: 1;
+		grid-row: 1;
+		align-self: center;
+	}
+
 	div.issue {
 		font-size: var(--font-text-size);
 		font-family: var(--font-text) monospace;

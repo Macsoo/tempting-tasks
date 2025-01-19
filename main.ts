@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: TemptingTasksSettings = {
 
 export default class TemptingTasksPlugin extends Plugin {
 	settings: TemptingTasksSettings;
+
 	async onload() {
 		await this.loadSettings();
 
@@ -41,10 +42,11 @@ export default class TemptingTasksPlugin extends Plugin {
 				}
 			}
 		});
+		this.register
 	}
 
 	async activateView() {
-		const { workspace } = this.app;
+		const {workspace} = this.app;
 
 		let leaf: WorkspaceLeaf | null;
 		const leaves = workspace.getLeavesOfType(ISSUES_VIEW_TYPE);
@@ -87,6 +89,7 @@ export default class TemptingTasksPlugin extends Plugin {
 		const newId = await this.getNewId();
 		this.settings.tasks.push(Object.assign({
 			id: newId,
+			done: false,
 		}, task));
 		const issue = this.settings.issues.find(issue => issue.id === issueId);
 		if (issue) {
@@ -108,16 +111,32 @@ export default class TemptingTasksPlugin extends Plugin {
 			.filter(task => task !== undefined);
 	}
 
-	async changeTaskStatus(issueId: ID, taskId: ID, checked: boolean) {
+	async changeTaskStatus(issueId: ID, taskId: ID | null, checked: boolean) {
 		const issue = this.settings.issues.find(issue => issue.id === issueId);
 		if (issue) {
-			issue.events.push({
-				when: new Date(),
-				what: {
-					type: checked ? 'closedTask' : 'reopenedTask',
-					taskId: taskId,
-				},
-			});
+			if (taskId !== null) {
+				issue.events.push({
+					when: new Date(),
+					what: {
+						type: checked ? 'closedTask' : 'reopenedTask',
+						taskId: taskId,
+					},
+				});
+			} else {
+				issue.events.push({
+					when: new Date(),
+					what: {
+						type: checked ? 'closedIssue' : 'reopenedIssue',
+					}
+				});
+				issue.done = checked;
+			}
+		}
+		if (taskId !== null) {
+			const task = this.settings.tasks.find(task => task.id === taskId);
+			if (task) {
+				task.done = checked;
+			}
 		}
 		await this.saveSettings();
 	}

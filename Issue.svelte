@@ -17,26 +17,27 @@
 			| 'example'
 			| 'quote',
 		title: string,
+		isDone: boolean,
 		bugfixes: Extract<Task, { type: "bugfix" }>[],
 		addBugfix: () => Promise<void>,
 		addFeature: () => Promise<void>,
-		onChecked: (taskId: ID, checked: boolean) => Promise<void>,
+		onChecked: (taskId: ID | null, checked: boolean) => Promise<void>,
 	}
 
 	let {
 		type,
 		title,
+		isDone,
 		addBugfix,
 		addFeature,
 		bugfixes,
 		onChecked,
 	}: Props = $props();
-	//TODO: Evaluate events to determine states
 	let tasksDone: boolean[] = $state([]);
 	let issueDisabled = $derived(tasksDone.some(done => !done));
-	let issueDone = $state(false);
-	const registerBugfix = (node: HTMLInputElement) => {
-		tasksDone.push(false);
+	let issueDone = $state(isDone);
+	const registerBugfix = (node: HTMLInputElement, bugfix: Task) => {
+		tasksDone.push(bugfix.done);
 	};
 
 	async function newBugfix() {
@@ -57,15 +58,16 @@
 					disabled={issueDisabled}
 					class={{issueDisabled}}
 					bind:checked={issueDone}
+					onchange={async () => await onChecked(null, issueDone)}
 				/>
 				<span>{title}</span>
 			</div>
 			<div class="callout-title-right">
-				<span title="Add bugfix">
-					<ShieldPlus onclick={newBugfix} class="edit-button" xlink:title="New Bugfix"/>
+				<span title="Add bugfix" class="edit-button">
+					<ShieldPlus onclick={newBugfix} xlink:title="New Bugfix"/>
 				</span>
-				<span title="Add feature">
-					<PackagePlus onclick={addFeature} class="edit-button" xlink:title="New Feature"/>
+				<span title="Add feature" class="edit-button">
+					<PackagePlus onclick={addFeature} xlink:title="New Feature"/>
 				</span>
 			</div>
 		</div>
@@ -79,7 +81,7 @@
 						type="checkbox"
 						class={{'task-list-item-checkbox': true, issueDone}}
 						disabled={issueDone}
-						use:registerBugfix
+						use:registerBugfix={bugfix}
 						bind:checked={tasksDone[i]}
 						onchange={async () => await onChecked(bugfix.id, tasksDone[i])}
 					/>

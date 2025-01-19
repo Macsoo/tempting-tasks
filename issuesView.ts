@@ -33,6 +33,7 @@ export class IssuesView extends ItemView {
 				newIssue: this.modal(IssueModal, async (_: void, newIssue) => {
 					const issue: Issue = {
 						id: await this.plugin.getNewId(),
+						done: false,
 						title: newIssue.title,
 						customer: newIssue.customer,
 						taskIDs: [],

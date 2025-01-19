@@ -5,7 +5,8 @@ export type TaskType = {
 } & Feature;
 
 export type Task = {
-	id: ID
+	id: ID,
+	done: boolean,
 } & TaskType;
 
 export interface Bugfix {
@@ -29,6 +30,10 @@ export type IssueEventType = {
 } | {
 	type: 'reopenedTask';
 	taskId: ID;
+} | {
+	type: 'closedIssue';
+} | {
+	type: 'reopenedIssue';
 }
 
 export interface IssueEvent {
@@ -39,15 +44,15 @@ export interface IssueEvent {
 
 export type ID = number;
 
-export type New<T> = T extends any ? Omit<T, 'id'> : never;
+export type New<T> = T extends any ? Omit<T, 'id' | 'done'> : never;
 
 export interface Issue {
 	title: string;
 	customer: string;
 	taskIDs: ID[];
 	id: ID;
+	done: boolean;
 	events: IssueEvent[];
-	statusComment?: string;
 	parentIssue?: ID;
 }
 
