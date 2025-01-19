@@ -60,11 +60,11 @@ export class IssuesView extends ItemView {
 						type: "feature",
 						event: feature.event,
 						conditions: feature.conditions,
-						action: feature.action,
+						actions: feature.actions,
 					});
 					return this.plugin.settings.issues;
 				}),
-				getBugfixes: this.plugin.getBugfixesForIssue.bind(this.plugin),
+				getTasks: this.plugin.getTasksForIssue.bind(this.plugin),
 				onTaskChange: this.plugin.changeTaskStatus.bind(this.plugin),
 			}
 		});

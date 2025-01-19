@@ -16,7 +16,7 @@ export interface Bugfix {
 export interface Feature {
 	event: string;
 	conditions: string[];
-	action: string;
+	actions: string[];
 }
 
 export type IssueEventType = {

@@ -18,7 +18,7 @@
 			| 'quote',
 		title: string,
 		isDone: boolean,
-		bugfixes: Extract<Task, { type: "bugfix" }>[],
+		tasks: Task[],
 		addBugfix: () => Promise<void>,
 		addFeature: () => Promise<void>,
 		onChecked: (taskId: ID | null, checked: boolean) => Promise<void>,
@@ -30,18 +30,23 @@
 		isDone,
 		addBugfix,
 		addFeature,
-		bugfixes,
+		tasks,
 		onChecked,
 	}: Props = $props();
 	let tasksDone: boolean[] = $state([]);
 	let issueDisabled = $derived(tasksDone.some(done => !done));
 	let issueDone = $state(isDone);
-	const registerBugfix = (node: HTMLInputElement, bugfix: Task) => {
-		tasksDone.push(bugfix.done);
+	const registerTask = (node: HTMLInputElement, task: Task) => {
+		tasksDone.push(task.done);
 	};
 
 	async function newBugfix() {
 		await addBugfix();
+		issueDone = false;
+	}
+
+	async function newFeature() {
+		await addFeature();
 		issueDone = false;
 	}
 
@@ -67,25 +72,44 @@
 					<ShieldPlus onclick={newBugfix} xlink:title="New Bugfix"/>
 				</span>
 				<span title="Add feature" class="edit-button">
-					<PackagePlus onclick={addFeature} xlink:title="New Feature"/>
+					<PackagePlus onclick={newFeature} xlink:title="New Feature"/>
 				</span>
 			</div>
 		</div>
 	</div>
 	<div class="callout-content">
 		<ul class="contains-task-list">
-			{#each bugfixes as bugfix, i (bugfix.id)}
+			{#each tasks as task, i (task.id)}
 				<li data-line={i + 1} data-task class="task-list-item" dir="auto">
 					<input
 						data-line={i + 1}
 						type="checkbox"
 						class={{'task-list-item-checkbox': true, issueDone}}
 						disabled={issueDone}
-						use:registerBugfix={bugfix}
+						use:registerTask="{task}"
 						bind:checked={tasksDone[i]}
-						onchange={async () => await onChecked(bugfix.id, tasksDone[i])}
+						onchange={async () => await onChecked(task.id, tasksDone[i])}
 					/>
-					<span>{bugfix.description}</span>
+					{#if task.type === 'bugfix'}
+						<span>{task.description}</span>
+					{:else}
+						{@const rowCount = Math.max(task.conditions.length, task.actions.length)}
+						<div class="grid">
+							<div class="grid-column">
+								<div class="grid-item">{task.event}</div>
+							</div>
+							<div class="grid-column">
+								{#each task.conditions as cond}
+									<div class="grid-item">{cond}</div>
+								{/each}
+							</div>
+							<div class="grid-column">
+								{#each task.actions as action}
+									<div class="grid-item">{action}</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
 				</li>
 			{/each}
 		</ul>
@@ -104,10 +128,11 @@
 	}
 
 	div.callout-title-left {
+		font-size: var(--font-text-size);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-inline-start: calc(var(--checkbox-size) * -1.5 + var(--list-indent));
+		margin-inline-start: calc(var(--checkbox-size) * -1.5 + var(--list-indent) * 0.75);
 	}
 
 	li.task-list-item {
@@ -127,7 +152,7 @@
 	}
 
 	ul.contains-task-list > li.task-list-item {
-		margin-inline-start: var(--list-indent);
+		margin-inline-start: calc(var(--list-indent) * 1.5);
 		padding-top: var(--list-spacing);
 		padding-bottom: var(--list-spacing);
 	}
@@ -170,5 +195,27 @@
 		-webkit-mask-repeat: no-repeat;
 		mask-image: unset;
 		-webkit-mask-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXgiPjxwYXRoIGQ9Ik0xOCA2IDYgMTgiLz48cGF0aCBkPSJtNiA2IDEyIDEyIi8+PC9zdmc+);
+	}
+
+	div.grid {
+		display: flex;
+		flex: 1 0 33%;
+		border: 1px solid black;
+		flex-direction: row;
+	}
+
+	div.grid-column {
+		display: flex;
+		flex: 1 0 0;
+		flex-direction: column;
+	}
+
+	div.grid-item {
+		flex: 1 1 0;
+		border: 1px solid black;
+		line-height: 2em;
+		padding: 0 0.5em;
+		text-wrap: wrap;
+		overflow-wrap: anywhere;
 	}
 </style>

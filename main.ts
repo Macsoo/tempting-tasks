@@ -105,7 +105,7 @@ export default class TemptingTasksPlugin extends Plugin {
 		await this.saveSettings();
 	}
 
-	getBugfixesForIssue(issue: Issue) {
+	getTasksForIssue(issue: Issue) {
 		return issue.taskIDs
 			.map(taskID => this.settings.tasks.find(task => task.id === taskID))
 			.filter(task => task !== undefined);

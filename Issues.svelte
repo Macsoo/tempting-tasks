@@ -7,7 +7,7 @@
 		newIssue: () => Promise<Issue[]>;
 		addBugfix: (issue: Issue) => Promise<Issue[]>;
 		addFeature: (issue: Issue) => Promise<Issue[]>;
-		getBugfixes: (issue: Issue) => Extract<Task, { type: 'bugfix' }>[];
+		getTasks: (issue: Issue) => Task[];
 		onTaskChange: (issueId: ID, taskId: ID | null, checked: boolean) => Promise<void>;
 	}
 
@@ -16,7 +16,7 @@
 		newIssue,
 		addBugfix,
 		addFeature,
-		getBugfixes,
+		getTasks,
 		onTaskChange,
 	}: Props = $props();
 	let issues = $state(initialIssues);
@@ -40,7 +40,7 @@
 			isDone={issue.done}
 			addBugfix={askNewBugfix(issue)}
 			addFeature={askNewFeature(issue)}
-			bugfixes={getBugfixes(issue)}
+			tasks={getTasks(issue)}
 			onChecked={async (taskId, checked) => await onTaskChange(issue.id, taskId, checked)}
 		/>
 	{/each}
@@ -59,7 +59,7 @@
 	}
 
 	div.issue {
-		font-size: var(--font-text-size);
+		font-size: calc(var(--font-text-size) / 2);
 		font-family: var(--font-text) monospace;
 		line-height: var(--line-height-normal);
 		max-width: var(--file-line-width);
